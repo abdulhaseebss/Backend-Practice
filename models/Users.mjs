@@ -1,44 +1,40 @@
-import mongoose from 'mongoose'
-import bcrypt from 'bcryptjs'
-const { Schema } = mongoose
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+const { Schema } = mongoose;
 
-const userSchema = new Schema({
-    email: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
-        required: true,
-        minLength: 6
-    },
-    fullname: {
-        type: String,
-        required: true
-    }
-})
+const usersSchema = new Schema({
+  fullname: {
+    require: true,
+    type: String,
+  },
+  email: {
+    require: true,
+    type: String,
+    unique: true,
+  },
+  password: {
+    require: true,
+    type: String,
+    minLength: 6,
+  },
+  contactNo: Number,
+});
 
-userSchema.pre("save", function (next) {
+usersSchema.pre("save", function (next) {
+  const user = this;
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(user.password, salt);
+
+  user.password = hash
+
+  next()
+});
+
+usersSchema.methods.comparePassword = function (password) {
     const user = this
-    //encryption
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(user.password, salt);
-
-    user.password = hash
-    next()
-})
-
-userSchema.methods.comparePassword = function (password) {
-    const user = this
-    //user.password === db password (encrypted) asjdhu2i346193
-    //password === frontend password (normal) 123456
-    console.log('db password', user.password)
-    console.log('frontend password', password)
-
-    return bcrypt.compareSync(password, user.password)
+    return bcrypt.compareSync(password, user.password);
 }
 
-const Users = mongoose.model("users", userSchema)
+const Users = mongoose.model("users", usersSchema);
 
-export default Users
+export default Users;
